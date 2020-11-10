@@ -1,0 +1,129 @@
+PROGRAM.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+namespace QueteEntityFrameworkCodeFirst
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+
+
+           // SavingCalculator CalculatorAccountInterestrateTotal = new SavingCalculator();
+            //Console.WriteLine(CalculatorAccountInterestrateTotal.CalculateTotalSaved());
+
+            using (var BddQueteEF = new BDDQueteEF())
+            {
+                // I wipe out my database at each execution
+                BddQueteEF.Database.EnsureDeleted();
+                // Then I recreate it
+                BddQueteEF.Database.EnsureCreated();
+
+
+                var Richard = new Person
+                {
+                    Person_Name = "riri"
+                };
+
+                //permet d'ajouter les comptes grace à Foreign key
+                Richard.SavingAccount = new List<SavingAccount>
+                {
+                    new SavingAccount { Interestrate = 1.80, StartFunds = 2000000 },   
+                    new SavingAccount { Interestrate = 1.15, StartFunds = 250000 },
+                    new SavingAccount { Interestrate = 1.02, StartFunds = 10000000 }
+                };
+                BddQueteEF.Persons.Add(Richard);
+
+                BddQueteEF.SaveChanges();
+
+            }
+
+        }
+    }
+}
+
+BDDQuete.cs
+
+using Microsoft.EntityFrameworkCore;
+
+namespace QueteEntityFrameworkCodeFirst
+{
+    class BDDQueteEF : DbContext
+    {
+        public DbSet<Person> Persons { get; set; }
+        public DbSet<SavingAccount> SavingAccounts { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // I add a connection to a database instance while the context configures
+            optionsBuilder.UseSqlServer(
+                @"Server=LOCALHOST\SQLEXPRESS;Database=BDDQueteEF;Integrated Security=True");
+        }
+    }
+    
+}
+
+SavingCalculator.cs
+
+using System;
+using System.Collections.Generic;
+
+namespace QueteEntityFrameworkCodeFirst
+{
+    class SavingCalculator
+    {
+        //public DateTime Begin;
+        //public DateTime End;
+        public Double ArgentTotal;
+        public int AccountID;
+
+
+        public virtual SavingAccount SavingAccount { get; }
+
+
+        public double CalculateTotalSaved(SavingAccount savingAccount)
+        {
+            //Permet de faire le resultat à la puissance 3
+           return ArgentTotal = Math.Pow((savingAccount.Interestrate * savingAccount.StartFunds),3);
+        }
+
+    }
+}
+
+PERSON.CS
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace QueteEntityFrameworkCodeFirst
+{
+    class Person
+    {
+        public int PersonID { get; set; }
+        public string Person_Name { get; set; }
+
+        //Definit la une Foreign key
+        public  ICollection<SavingAccount> SavingAccount { get; set; }
+    }
+}
+
+SAVINGACCOUNT.cs
+
+using System;
+using System.Collections.Generic;
+
+namespace QueteEntityFrameworkCodeFirst
+{
+    class SavingAccount
+    {
+        public int SavingAccountID { get; set; }
+        public Double Interestrate { get; set; }
+        public int StartFunds { get; set; }
+
+        public Person FK_ { get; set; }
+
+    }
+}
