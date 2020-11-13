@@ -1,0 +1,108 @@
+PROGRAM.CS
+
+
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+
+namespace QueteLinQ
+{
+    class Program
+    {
+        static void Main()
+        {
+            CreateDatabase();
+
+            using (var LinQuest = new DataBaseQueteLinQ())
+            {
+                foreach (Species speciess in LinQuest.species.Include(c => c.animals))
+                {
+                    Console.WriteLine(speciess.SpecieName);
+                    foreach (Animal animal1 in speciess.animals)
+                    {
+                        Console.WriteLine("\t" + animal1.AnimalsName + " : " + animal1.NumbersAlive);
+                    }
+                }
+            }
+
+        }
+
+        private static void CreateDatabase()
+        {
+            using (var context = new DataBaseQueteLinQ())
+            {
+                context.Database.EnsureDeleted();
+                context.Database.EnsureCreated();
+
+                IList<Animal> carnivors = new List<Animal>
+                {
+                   new Animal { AnimalsName="White Cougars", NumbersAlive = 3 },
+                   new Animal { AnimalsName="White Tigers", NumbersAlive = 100},
+                };
+                IList<Animal> reptils = new List<Animal>
+                {
+                    new Animal {AnimalsName ="Albinos Turtle", NumbersAlive = 15}
+                };
+                Species carnivor = new Species { SpecieName = "Carnivor", animals = carnivors };
+                Species reptil = new Species { SpecieName = "Reptil", animals = reptils };
+
+                context.AddRange(carnivor, reptil);
+                context.SaveChanges();
+            }
+        }
+    }
+}
+
+    ANIMAL.CS
+
+
+namespace QueteLinQ
+{
+    public class Animal
+    {
+        public int AnimalID { get; set; }
+        public string AnimalsName { get; set; }
+        public int NumbersAlive { get; set; }
+
+        //Appel à la clé etrangère
+
+        public Species Species { get; set; }
+    }
+}
+
+    SPECIES.CS
+
+using System.Collections.Generic;
+
+namespace QueteLinQ
+{
+    public class Species
+    {
+        public int SpeciesID { get; set; }
+        public string SpecieName { get; set; }
+
+        //definir cles etrangere
+
+        public IList<Animal> animals { get; set; }
+    }
+}
+
+DATABASEQUETELINQ.cs
+
+using Microsoft.EntityFrameworkCore;
+
+namespace QueteLinQ
+{
+    class DataBaseQueteLinQ : DbContext
+    {
+        public DbSet<Animal> animals { get; set; }
+        public DbSet<Species> species { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer(
+                @"Server=LOCALHOST\SQLEXPRESS;Database=DataBaseQueteLinQ;Integrated Security=True");
+        }
+    }
+}
+
